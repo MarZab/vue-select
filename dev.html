@@ -8,49 +8,74 @@
     <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.3.2/css/bulma.min.css" rel="stylesheet">-->
     <!--<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">-->
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <style>
-        html,
-        body,
-        #app {
-            height: 100vh;
-        }
-
-        #app {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
         .v-select {
-            width: 25em;
-            margin: 1em;
+            margin-top: 5px;
         }
     </style>
 </head>
 
 <body>
     <div id="app">
-        <v-select placeholder="default" :options="options"></v-select>
-        <v-select placeholder="default, RTL" :options="options" dir="rtl"></v-select>
-        <v-select placeholder="multiple" multiple :options="options"></v-select>
-        <v-select placeholder="multiple, taggable" multiple taggable :options="options" no-drop></v-select>
-        <v-select placeholder="multiple, taggable, push-tags" multiple push-tags taggable :options="[{label: 'Foo', value: 'foo'}]"></v-select>
-        <v-select placeholder="multiple, closeOnSelect=true" multiple :options="['cat', 'dog', 'bear']"></v-select>
-        <v-select placeholder="multiple, closeOnSelect=false" multiple :close-on-select="false" :options="['cat', 'dog', 'bear']"></v-select>
-        <v-select placeholder="unsearchable" :options="options" :searchable="false"></v-select>
-        <v-select placeholder="search github.." label="full_name" @search="search" :options="ajaxRes"></v-select>
-        <v-select placeholder="custom option template" :options="options" multiple>
-            <template slot="selected-option" scope="option">
-                <img :src='"https://www.kidlink.org/icons/f0-" + option.value.toLowerCase() + ".gif"'/> 
-                {{option.label}}
-            </template>
-            <template slot="option" scope="option">
-                <img :src='"https://www.kidlink.org/icons/f0-" + option.value.toLowerCase() + ".gif"'/> 
-                {{option.label}} ({{option.value}})
-            </template>
-        </v-select>
-        <v-select disabled placeholder="disabled" value="Some Selected Value"></v-select>
+        <div class="container">
+            <div class="row mt-2">
+                <div class="col-12 mb-4">
+                    Value: <span>{{value}}</span>
+                </div>
+                <div class="col-2">
+                    <v-select placeholder="default" :options="options"></v-select>
+                    <v-select placeholder="multiple" multiple :options="options"></v-select>
+                    <v-select placeholder="multiple, taggable" multiple taggable v-model="value" :close-on-select="false" no-drop></v-select>
+                    <v-select placeholder="custom option template, taggable, object options" v-model="value" :options="[{label: 'Foo', value: 'foo'}]" multiple taggable>
+                        <template slot="selected-option" slot-scope="option">
+                            {{option.label}}
+                        </template>
+                        <template slot="option" slot-scope="option">
+                            {{option.label}}
+                        </template>
+                    </v-select>
+                </div>
+                <div class="col-3">
+                    <v-select placeholder="multiple, taggable, push-tags" multiple push-tags taggable :options="[{label: 'Foo', value: 'foo'}]"></v-select>
+                    <v-select placeholder="multiple, closeOnSelect=true" multiple :options="['cat', 'dog', 'bear']"></v-select>
+                    <v-select placeholder="multiple, closeOnSelect=false" multiple :close-on-select="false" :options="['cat', 'dog', 'bear']"></v-select>
+                    <v-select placeholder="unsearchable" :options="options" :searchable="false"></v-select>
+                </div>
+                <div class="col-6">
+
+                    <v-select placeholder="search github.." label="full_name" @search="search" :options="ajaxRes"></v-select>
+                    <v-select placeholder="custom option template" :options="options" multiple>
+                        <template slot="selected-option" slot-scope="option">
+                            <img :src='"https://www.kidlink.org/icons/f0-" + option.value.toLowerCase() + ".gif"'/>
+                            {{option.label}}
+                        </template>
+                        <template slot="option" slot-scope="option">
+                            <img :src='"https://www.kidlink.org/icons/f0-" + option.value.toLowerCase() + ".gif"'/>
+                            {{option.label}} ({{option.value}})
+                        </template>
+                    </v-select>
+                    <v-select placeholder="custom option template, taggable, string options" v-model="value" :options="['cat', 'dog', 'bear']" multiple taggable>
+                        <template slot="selected-option" slot-scope="option">
+                            {{option.label}}
+                        </template>
+                        <template slot="option" slot-scope="option">
+                            {{option.label}}
+                        </template>
+                    </v-select>
+                    <v-select placeholder="custom option template, taggable, object options" v-model="value" :options="[{label: 'Foo', value: 'foo'}]" multiple taggable>
+                        <template slot="selected-option" slot-scope="option">
+                            POOP {{option.label}}
+                        </template>
+                        <template slot="option" slot-scope="option">
+                            {{option.label}}
+                        </template>
+                    </v-select>
+                    <v-select disabled placeholder="disabled" value="Some Selected Value"></v-select>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 

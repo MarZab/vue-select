@@ -19,11 +19,13 @@
   .v-select.rtl .open-indicator {
     left: 10px;
     right: auto;
+    z-index: -1;
   }
   .v-select.rtl .selected-tag {
     float: right;
     margin-right: 3px;
     margin-left: 1px;
+    max-width: 100%;
   }
   .v-select.rtl .dropdown-menu {
     text-align: right;
@@ -31,7 +33,7 @@
   /* Open Indicator */
   .v-select .open-indicator {
     position: absolute;
-    bottom: 6px;
+    top: 12px;
     right: 10px;
     display: inline-block;
     cursor: pointer;
@@ -48,6 +50,7 @@
     content: '';
     display: inline-block;
     height: 10px;
+    opacity: 0.2;
     width: 10px;
     vertical-align: top;
     transform: rotate(133deg);
@@ -57,7 +60,7 @@
   }
   /* Open Indicator States */
   .v-select.open .open-indicator:before {
-    transform: rotate(315deg);
+    opacity: 1;
   }
   .v-select.loading .open-indicator {
     opacity: 0;
@@ -71,7 +74,7 @@
     -moz-appearance: none;
     appearance: none;
     display: block;
-    padding: 0;
+    padding: 0 0 3px 3px;
     background: none;
     border: 1px solid rgba(60, 60, 60, .26);
     border-radius: 4px;
@@ -121,28 +124,37 @@
     text-align: center;
   }
   /* Selected Tags */
+  .v-select .selected-tag-wrap {
+    max-width: 100%;
+    overflow: hidden;
+    padding: 3px 3px 0px 0px;
+    float: left;
+  }
   .v-select .selected-tag {
     color: #333;
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 4px;
-    height: 26px;
-    margin: 4px 1px 0px 3px;
     padding: 1px 0.25em;
-    float: left;
+
     line-height: 24px;
+    position: relative;
   }
   .v-select.single .selected-tag {
     background-color: transparent;
     border-color: transparent;
   }
-  .v-select.single.open .selected-tag {
+  .v-select.single.open .selected-tag-wrap {
     position: absolute;
     opacity: .5;
   }
   .v-select.single.open.searching .selected-tag,
   .v-select.single.loading .selected-tag {
     display: none;
+  }
+  .v-select.multiple .selected-tag {
+    padding-right: 17px;
+    overflow: hidden;
   }
   .v-select .selected-tag .close {
     float: none;
@@ -159,6 +171,9 @@
     text-shadow: 0 1px 0 #fff;
     filter: alpha(opacity=20);
     opacity: .2;
+    position: absolute;
+    right: 2px;
+    top: 2px;
   }
   .v-select.single.searching:not(.open):not(.loading) input[type="search"] {
     opacity: .2;
@@ -180,19 +195,33 @@
     -moz-appearance: none;
     line-height: 1.42857143;
     font-size:1em;
-    height: 34px;
     display: inline-block;
     border: none;
     outline: none;
     margin: 0;
-    padding: 0 .5em;
-    width: 10em;
+    padding: 0;
+    width: 0;
     max-width: 100%;
     background: none;
     position: relative;
     box-shadow: none;
     float: left;
     clear: none;
+  }
+  .v-select .placeholder {
+    opacity: 0.5;
+    display: inline-block;
+    max-width: 100%;
+    margin: 5px 5px;
+    box-sizing: border-box;
+    float: left;
+  }
+  .v-select.open input[type="search"], .v-select input[type="search"]:focus{
+    width: auto;
+    padding: 6px 5px 3px 5px;
+  }
+  .v-select.single {
+
   }
   /* List Items */
   .v-select li {
@@ -282,14 +311,24 @@
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
     <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix', {'disabled': disabled}]">
 
-      <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
-        <slot name="selected-option" v-bind="option">
-          {{ getOptionLabel(option) }}
-        </slot>
-        <button v-if="multiple" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </span>
+      <slot v-for="option in valueAsArray" name="selected-option-container" @click="focus()"
+          :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :focus="focus" >
+        <div class="selected-tag-wrap">
+          <div class="selected-tag" v-bind:key="option.index" @click="focus()">
+            <slot name="selected-option"
+                 v-bind="(typeof option === 'object')?option:{[label]: option}">
+              {{ getOptionLabel(option) }}
+            </slot>
+            <button v-if="multiple" @click.prevent="deselect(option)" type="button" class="close" tabindex="-1"
+                    aria-label="Remove option">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+      </slot>
+
+      <div class="placeholder" @click="focus()"
+            v-if="this.isValueEmpty && this.placeholder && !this.open"><span>{{placeholder}}</span></div>
 
       <input
               ref="search"
@@ -302,15 +341,13 @@
               @blur="onSearchBlur"
               @focus="onSearchFocus"
               type="search"
-              :class="[{'disabled': disabled}, 'form-control']"
-              :placeholder="searchPlaceholder"
+              :class="[{'disabled': disabled}]"
               :readonly="!searchable"
-              :style="{ width: isValueEmpty ? '100%' : 'auto' }"
               :id="inputId"
               aria-label="Search for option"
       >
 
-      <i v-if="!noDrop" ref="openIndicator" role="presentation" :class="[{'disabled': disabled}, 'open-indicator']"></i>
+      <!--i v-if="!noDrop" ref="openIndicator" role="presentation" :class="[{'disabled': disabled}, 'open-indicator']"></i-->
 
       <slot name="spinner">
         <div class="spinner" v-show="mutableLoading">Loading...</div>
@@ -321,7 +358,7 @@
       <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
           <a @mousedown.prevent="select(option)">
-          <slot name="option" v-bind="option">
+          <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
             {{ getOptionLabel(option) }}
           </slot>
           </a>
@@ -351,6 +388,11 @@
        */
       value: {
         default: null
+      },
+
+      valueMode: {
+        type: String,
+        default: 'string'
       },
 
       /**
@@ -511,10 +553,10 @@
       createOption: {
         type: Function,
         default(newOption) {
-          if (typeof this.mutableOptions[0] === 'object') {
+          if (typeof this.mutableOptions[0] === 'object' || this.valueMode === 'object') {
             newOption = {[this.label]: newOption}
           }
-          this.$emit('option:created', newOption)
+          this.$emit('option:created', newOption);
           return newOption
         }
       },
@@ -777,6 +819,10 @@
         this.$emit('search:focus')
       },
 
+      focus() {
+          this.$refs.search.focus();
+      },
+
       /**
        * Delete the value on Delete keypress when there is no
        * text in the search input, & there's tags to delete
@@ -833,9 +879,11 @@
         return {
           open: this.dropdownOpen,
           single: !this.multiple,
+          multiple: this.multiple,
           searching: this.searching,
           searchable: this.searchable,
           unsearchable: !this.searchable,
+          empty: this.isValueEmpty,
           loading: this.mutableLoading,
           rtl: this.dir === 'rtl'
         }
@@ -865,17 +913,6 @@
        */
       dropdownOpen() {
         return this.noDrop ? false : this.open && !this.mutableLoading
-      },
-
-      /**
-       * Return the placeholder string if it's set
-       * & there is no value selected.
-       * @return {String} Placeholder text
-       */
-      searchPlaceholder() {
-        if (this.isValueEmpty && this.placeholder) {
-          return this.placeholder;
-        }
       },
 
       /**
